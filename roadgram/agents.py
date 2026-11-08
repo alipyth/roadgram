@@ -18,7 +18,7 @@ BODY = """# roadgram: roadmap and plan in Telegram
 `roadgram` publishes `ROADMAP.md` (a Markdown checklist) to a Telegram group. Messages are edited in place.
 
 ## When to use
-- A task from `ROADMAP.md` is finished: change its `- [ ]` to `- [x]`, then run `roadgram sync`.
+- A task from `ROADMAP.md` is finished: change its `- [ ]` to `- [x]`. If `roadgram watch` is running the group updates by itself; otherwise run `roadgram sync`.
 - The user asks for progress: run `roadgram status` (sends nothing).
 - The user wants an announcement or a file sent to the group: run `roadgram post --text "..."` or `--document <file>`.
 - First use in a project (no `roadgram.json`): run `roadgram init --name "<name>"`, then ask the user to fill `.env`, then `roadgram check`.
@@ -32,12 +32,16 @@ BODY = """# roadgram: roadmap and plan in Telegram
 | `roadgram plan N [--dry-run]` | post/edit the plan message of week N |
 | `roadgram post --text "..." [--topic updates] [--pin]` | send a NEW message (explicit announcement) |
 | `roadgram check` | verify token, group, topics and bot rights |
+| `roadgram watch` | long-running: auto-sync on every save, handles the client's approve / change buttons and payment reminders |
+| `roadgram approve N [--by NAME]` / `roadgram paid N` | record an approval / a received payment given outside Telegram |
 
 ## Rules
 - Never open, print, copy or commit `.env`. It holds the bot token. Never put the token in a command line.
 - `roadgram post`, `roadgram week` and `roadgram plan` send to real people: use `--dry-run` first and send only what the user asked for.
 - `roadgram sync` is safe to run after every `ROADMAP.md` change; it only edits existing messages (and advances a finished week).
 - Only tick a task `[x]` when the work is really done and verified.
+- `- **Approved:**` and `- **Paid:**` lines are written by roadgram from the client's buttons: never add or edit them yourself unless the user tells you the client approved or paid.
+- Tasks starting with `✏️` are change requests from the client: treat them as normal work items.
 - Headings must look like `## Week 1: Title` (or `## هفته ۱: عنوان`); tasks are `- [ ]` / `- [x]` lines.
 - If the command is not found, tell the user to install it: `pipx install git+https://github.com/alipyth/roadgram`.
 """

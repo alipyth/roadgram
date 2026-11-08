@@ -10,10 +10,10 @@
   <g fill="#0f172a" text-anchor="middle">
     <text x="140" y="68" font-size="20" font-weight="700">ROADMAP.md</text>
     <text x="140" y="96" font-size="15" fill="#475569">- [x] done  - [ ] todo</text>
-    <text x="500" y="68" font-size="20" font-weight="700">roadgram sync</text>
-    <text x="500" y="96" font-size="15" fill="#475569">one command</text>
+    <text x="500" y="68" font-size="20" font-weight="700">roadgram watch</text>
+    <text x="500" y="96" font-size="15" fill="#475569">automatic, on every save</text>
     <text x="860" y="68" font-size="20" font-weight="700">Telegram group</text>
-    <text x="860" y="96" font-size="15" fill="#475569">edited + pinned messages</text>
+    <text x="860" y="96" font-size="15" fill="#475569">live messages + ✅ / ✏️ buttons</text>
   </g>
   <g stroke="#37aee2" stroke-width="3" marker-end="url(#a)">
     <line x1="274" y1="75" x2="364" y2="75"/>

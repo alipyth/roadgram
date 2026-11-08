@@ -1,14 +1,17 @@
-"""Command line: roadgram init | check | status | week N | plan N | sync | post."""
+"""Command line: roadgram init | check | status | week N | plan N | sync | watch | approve N | paid N | post | hook."""
 import argparse
 import html
 import sys
-from datetime import date
+import time
+from datetime import date, datetime
 from pathlib import Path
 
 from roadgram import __version__, agents
 from roadgram.i18n import SAMPLE_ROADMAP
-from roadgram.manager import CONFIG_NAME, Manager, State, default_config, find_root, load_config
-from roadgram.roadmap import parse_roadmap, render_plan, render_week
+from roadgram.dates import date_text
+from roadgram.inbox import Inbox
+from roadgram.manager import CONFIG_NAME, STATE_DIR, Manager, State, default_config, find_root, load_config
+from roadgram.roadmap import parse_roadmap, render_plan, render_week, set_meta
 from roadgram.telegram import Bot, credentials
 
 ENV_TEMPLATE = """# Keep this file private. Never commit it.
@@ -48,7 +51,7 @@ def cmd_init(a) -> int:
         gi.write_text("\n".join(existing + missing) + "\n", encoding="utf-8")
         created.append(".gitignore")
     out("Created/updated: " + ", ".join(created))
-    out("Next: fill TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env, then run: roadgram check")
+    out("Next: fill TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env, run `roadgram check`, then `roadgram watch`.")
     return 0
 
 
@@ -136,6 +139,13 @@ def cmd_check(a) -> int:
         if forum and not m.get("can_manage_topics", True):
             out("✗ missing right: Manage topics")
             ok = False
+    hook = bot.request("getWebhookInfo")
+    if hook.get("ok") and hook["result"].get("url"):
+        out("! a webhook is set on this bot: the buttons need it removed "
+            "(open https://api.telegram.org/bot<TOKEN>/deleteWebhook once)")
+    if cfg.get("approval", True):
+        out("✓ client approval buttons are on" + ("" if cfg.get("owners") else
+            '  (tip: put your Telegram id in "owners" in roadgram.json; send /whoami to the bot to see it)'))
     return 0 if ok else 1
 
 
@@ -182,20 +192,156 @@ def cmd_week_or_plan(a) -> int:
     return 1 if "failed" in result else 0
 
 
+WATCH_BEAT = "watch.alive"
+
+
+def watcher_alive(root: Path) -> bool:
+    beat = root / STATE_DIR / WATCH_BEAT
+    return beat.exists() and time.time() - beat.stat().st_mtime < 90
+
+
 def cmd_sync(a) -> int:
     p = project(a)
     if not p:
         return 2
     root, cfg = p
-    weeks = load_weeks(root, cfg)
-    if not weeks:
+    if not load_weeks(root, cfg):
         return 2
     mgr = make_manager(root, cfg)
     if not mgr:
         return 2
-    results = mgr.sync(weeks, date.today())
-    out("\n".join(results) if results else "Nothing posted yet. Start with: roadgram week 1  and  roadgram plan 2")
+    results = []
+    if cfg.get("approval", True) and not watcher_alive(root):  # pick up button presses made since the last run
+        log, _, _ = Inbox(mgr, root / cfg["roadmap_file"]).poll(0)
+        results += log
+    weeks = load_weeks(root, cfg)
+    results += mgr.sync(weeks, date.today()) if weeks else []
+    out("\n".join(results) if results else "Nothing to do.")
     return 1 if any("failed" in r for r in results) else 0
+
+
+def stamp(msg: str):
+    out(f"[{datetime.now():%H:%M:%S}] {msg}")
+
+
+def sync_quiet(mgr: Manager, root: Path, cfg: dict):
+    weeks = load_weeks(root, cfg)
+    for line in mgr.sync(weeks, date.today()) if weeks else []:
+        if not line.endswith("up to date"):
+            stamp(line)
+
+
+def cmd_watch(a) -> int:
+    """Keep running: sync on every save of the roadmap, handle the client's buttons, send payment reminders."""
+    p = project(a)
+    if not p:
+        return 2
+    root, cfg = p
+    mgr = make_manager(root, cfg)
+    if not mgr or not load_weeks(root, cfg):
+        return 2
+    path, beat = root / cfg["roadmap_file"], root / STATE_DIR / WATCH_BEAT
+    buttons = cfg.get("approval", True)
+    stamp(f"watching {cfg['roadmap_file']}" + (" and the Telegram group" if buttons else "") + " (Ctrl+C to stop)")
+    last, day, force, errors = None, None, True, 0
+    try:
+        while True:
+            try:
+                beat.parent.mkdir(exist_ok=True)
+                beat.touch()
+                mgr.state = State(root)  # pick up changes made by other roadgram commands
+                mtime = path.stat().st_mtime_ns if path.exists() else None
+                if force or mtime != last or day != date.today():
+                    sync_quiet(mgr, root, cfg)
+                    last = path.stat().st_mtime_ns if path.exists() else None
+                    day, force = date.today(), False
+                if buttons:
+                    log, changed, ok = Inbox(mgr, path).poll(0 if a.once else a.interval)
+                    for line in log:
+                        stamp(line)
+                    force = force or changed
+                    errors = 0 if ok else errors + 1
+                    if not ok and not a.once:
+                        time.sleep(min(60, 5 * errors))
+                elif not a.once:
+                    time.sleep(a.interval)
+                if a.once:
+                    if force:
+                        sync_quiet(mgr, root, cfg)
+                    break
+            except KeyboardInterrupt:
+                raise
+            except Exception as e:  # keep running: a network blip or a half-saved file must not stop the watcher
+                stamp(f"error: {type(e).__name__}: {e}")
+                if a.once:
+                    return 1
+                time.sleep(5)
+    except KeyboardInterrupt:
+        stamp("stopped")
+    finally:
+        beat.unlink(missing_ok=True)
+    return 0
+
+
+def cmd_mark(a) -> int:
+    """`roadgram approve N` / `roadgram paid N` from the terminal (e.g. the client approved by phone)."""
+    p = project(a)
+    if not p:
+        return 2
+    root, cfg = p
+    weeks = load_weeks(root, cfg)
+    if not weeks or not week_arg(weeks, a.n):
+        return 2
+    path = root / cfg["roadmap_file"]
+    when = date_text(date.today(), cfg["language"], cfg["calendar"])
+    key = "approved" if a.cmd == "approve" else "paid"
+    value = None if a.undo else (f"{a.by} · {when}" if key == "approved" and a.by else when)
+    path.write_bytes(set_meta(path.read_bytes().decode("utf-8-sig"), a.n, key, value, cfg["language"]).encode("utf-8"))
+    out(f"week {a.n}: {key} " + ("removed from " if a.undo else "written to ") + cfg["roadmap_file"])
+    if a.no_sync:
+        return 0
+    mgr = make_manager(root, cfg)
+    if mgr:
+        weeks = load_weeks(root, cfg)
+        out("\n".join(mgr.sync(weeks, date.today()) if weeks else []))
+    return 0
+
+
+HOOK_BEGIN, HOOK_END = "# roadgram:begin", "# roadgram:end"
+
+
+def cmd_hook(a) -> int:
+    """Git post-commit hook that runs `roadgram sync` in the background after every commit."""
+    p = project(a)
+    if not p:
+        return 2
+    root, _ = p
+    git = next((d / ".git" for d in [root, *root.parents] if (d / ".git").is_dir()), None)
+    if git is None:
+        out("No git repository found (a .git folder at or above the project).")
+        return 2
+    hook = git / "hooks" / "post-commit"
+    text = hook.read_text(encoding="utf-8") if hook.exists() else ""
+    if HOOK_BEGIN in text and HOOK_END in text:
+        start, end = text.index(HOOK_BEGIN), text.index(HOOK_END) + len(HOOK_END)
+        text = text[:start].rstrip("\n") + "\n" + text[end:].lstrip("\n")
+    if a.uninstall:
+        if text.strip() in ("", "#!/bin/sh"):
+            hook.unlink(missing_ok=True)
+        else:
+            hook.write_text(text, encoding="utf-8", newline="\n")
+        out("Removed the roadgram post-commit hook.")
+        return 0
+    d = root.as_posix()
+    block = (f"{HOOK_BEGIN}\n(roadgram --dir \"{d}\" sync >/dev/null 2>&1 || "
+             f"python -m roadgram --dir \"{d}\" sync >/dev/null 2>&1) &\n{HOOK_END}\n")
+    if not text.strip():
+        text = "#!/bin/sh\n"
+    hook.parent.mkdir(parents=True, exist_ok=True)
+    hook.write_text(text.rstrip("\n") + "\n" + block, encoding="utf-8", newline="\n")
+    hook.chmod(0o755)
+    out(f"Installed {hook}: every commit now runs `roadgram sync` in the background.")
+    return 0
 
 
 def cmd_post(a) -> int:
@@ -270,8 +416,28 @@ def build_parser() -> argparse.ArgumentParser:
         s.add_argument("--dry-run", action="store_true", help="print the message, send nothing")
         s.set_defaults(fn=cmd_week_or_plan)
 
-    sub.add_parser("sync", help="edit every posted message; post the next week when the current one is done"
+    sub.add_parser("sync", help="handle button presses, edit every posted message, advance when a week is done"
                    ).set_defaults(fn=cmd_sync)
+
+    s = sub.add_parser("watch", help="keep running: auto-sync on every save, handle the client's buttons, send reminders")
+    s.add_argument("--interval", type=int, default=3, help="seconds between checks (default: 3)")
+    s.add_argument("--once", action="store_true", help="run one round and exit (for cron / Task Scheduler)")
+    s.set_defaults(fn=cmd_watch)
+
+    for name, helptext in (("approve", "mark a week as approved by the client (writes **Approved:** into the roadmap)"),
+                           ("paid", "mark the milestone payment of a week as received (writes **Paid:**)")):
+        s = sub.add_parser(name, help=helptext)
+        s.add_argument("n", type=int, help="week number")
+        if name == "approve":
+            s.add_argument("--by", help="who approved (default: no name)")
+        s.add_argument("--undo", action="store_true", help="remove the line again")
+        s.add_argument("--no-sync", action="store_true", help="only edit the roadmap file")
+        s.set_defaults(fn=cmd_mark, by=None)
+
+    s = sub.add_parser("hook", help="install a git post-commit hook that runs `roadgram sync` after every commit")
+    s.add_argument("action", choices=["install"])
+    s.add_argument("--uninstall", action="store_true")
+    s.set_defaults(fn=cmd_hook)
 
     s = sub.add_parser("post", help="send a NEW message or file to a topic (explicit announcement)")
     s.add_argument("--topic", default="updates", help="topic key from roadgram.json (default: updates)")

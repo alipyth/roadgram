@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roadgram"
-version = "0.1.0"
-description = "Publish a Markdown roadmap and weekly plan to a Telegram group, with progress bars, auto-advance and one-command editor integrations."
+version = "0.2.0"
+description = "Publish a Markdown roadmap and weekly plan to a Telegram group: progress bars, client approval buttons, milestone invoices and fully automatic sync."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

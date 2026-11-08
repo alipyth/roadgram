@@ -69,15 +69,33 @@ class Bot:
     def create_topic(self, name: str) -> dict:
         return self.request("createForumTopic", {"chat_id": self.chat, "name": name})
 
-    def send(self, text: str, thread: int | None = None) -> dict:
-        body = {"chat_id": self.chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True}
+    def send(self, text: str, thread: int | None = None, markup: dict | None = None, reply_to: int | None = None,
+             chat: str | int | None = None) -> dict:
+        body = {"chat_id": chat or self.chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True}
         if thread:
             body["message_thread_id"] = thread
+        if markup is not None:
+            body["reply_markup"] = markup
+        if reply_to:
+            body["reply_parameters"] = {"message_id": reply_to, "allow_sending_without_reply": True}
         return self.request("sendMessage", body)
 
-    def edit(self, message_id: int, text: str) -> dict:
-        return self.request("editMessageText", {"chat_id": self.chat, "message_id": message_id, "text": text,
-                                                "parse_mode": "HTML", "disable_web_page_preview": True})
+    def edit(self, message_id: int, text: str, markup: dict | None = None) -> dict:
+        body = {"chat_id": self.chat, "message_id": message_id, "text": text,
+                "parse_mode": "HTML", "disable_web_page_preview": True}
+        if markup is not None:
+            body["reply_markup"] = markup
+        return self.request("editMessageText", body)
+
+    def answer(self, callback_id: str, text: str = "", alert: bool = False) -> dict:
+        return self.request("answerCallbackQuery", {"callback_query_id": callback_id, "text": text[:190],
+                                                    "show_alert": alert})
+
+    def updates(self, offset: int | None, timeout: int = 0) -> dict:
+        body = {"timeout": timeout, "allowed_updates": ["message", "callback_query"]}
+        if offset is not None:
+            body["offset"] = offset
+        return self.request("getUpdates", body)
 
     def pin(self, message_id: int) -> dict:
         return self.request("pinChatMessage", {"chat_id": self.chat, "message_id": message_id,
