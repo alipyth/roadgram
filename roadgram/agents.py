@@ -1,65 +1,65 @@
-"""`tgpm agent install`: teach AI coding agents (Claude Code, Codex, Cline, Cursor, Gemini CLI) to use tgpm.
+"""`roadgram agent install`: teach coding assistants (Claude Code, Codex, Cline, Cursor, Gemini CLI) to use roadgram.
 
-One shared instruction text is written in each tool's own format. Files that tgpm owns are overwritten;
+One shared instruction text is written in each tool's own format. Files that roadgram owns are overwritten;
 shared files (AGENTS.md, GEMINI.md) only get a marked block that is replaced on re-install and removed by --uninstall.
 """
 import os
 import re
 from pathlib import Path
 
-BEGIN, END = "<!-- tgpm:begin -->", "<!-- tgpm:end -->"
+BEGIN, END = "<!-- roadgram:begin -->", "<!-- roadgram:end -->"
 
-DESCRIPTION = ("Keep the project roadmap in sync with the Telegram group using the tgpm CLI. "
+DESCRIPTION = ("Keep the project roadmap in sync with the Telegram group using the roadgram CLI. "
                "Use when the user asks to update/sync the roadmap, tick tasks, post a weekly plan, "
                "or announce something to the project Telegram group.")
 
-BODY = """# tgpm: roadmap and plan in Telegram
+BODY = """# roadgram: roadmap and plan in Telegram
 
-`tgpm` publishes `ROADMAP.md` (a Markdown checklist) to a Telegram group. Messages are edited in place.
+`roadgram` publishes `ROADMAP.md` (a Markdown checklist) to a Telegram group. Messages are edited in place.
 
 ## When to use
-- A task from `ROADMAP.md` is finished: change its `- [ ]` to `- [x]`, then run `tgpm sync`.
-- The user asks for progress: run `tgpm status` (sends nothing).
-- The user wants an announcement or a file sent to the group: run `tgpm post --text "..."` or `--document <file>`.
-- First use in a project (no `tgpm.json`): run `tgpm init --name "<name>"`, then ask the user to fill `.env`, then `tgpm check`.
+- A task from `ROADMAP.md` is finished: change its `- [ ]` to `- [x]`, then run `roadgram sync`.
+- The user asks for progress: run `roadgram status` (sends nothing).
+- The user wants an announcement or a file sent to the group: run `roadgram post --text "..."` or `--document <file>`.
+- First use in a project (no `roadgram.json`): run `roadgram init --name "<name>"`, then ask the user to fill `.env`, then `roadgram check`.
 
 ## Commands
 | Command | Effect |
 |---|---|
-| `tgpm status` | progress per week, sends nothing |
-| `tgpm sync` | edits every posted message; posts the next week when the current one is fully ticked |
-| `tgpm week N [--dry-run]` | post/edit the roadmap message of week N |
-| `tgpm plan N [--dry-run]` | post/edit the plan message of week N |
-| `tgpm post --text "..." [--topic updates] [--pin]` | send a NEW message (explicit announcement) |
-| `tgpm check` | verify token, group, topics and bot rights |
+| `roadgram status` | progress per week, sends nothing |
+| `roadgram sync` | edits every posted message; posts the next week when the current one is fully ticked |
+| `roadgram week N [--dry-run]` | post/edit the roadmap message of week N |
+| `roadgram plan N [--dry-run]` | post/edit the plan message of week N |
+| `roadgram post --text "..." [--topic updates] [--pin]` | send a NEW message (explicit announcement) |
+| `roadgram check` | verify token, group, topics and bot rights |
 
 ## Rules
 - Never open, print, copy or commit `.env`. It holds the bot token. Never put the token in a command line.
-- `tgpm post`, `tgpm week` and `tgpm plan` send to real people: use `--dry-run` first and send only what the user asked for.
-- `tgpm sync` is safe to run after every `ROADMAP.md` change; it only edits existing messages (and advances a finished week).
+- `roadgram post`, `roadgram week` and `roadgram plan` send to real people: use `--dry-run` first and send only what the user asked for.
+- `roadgram sync` is safe to run after every `ROADMAP.md` change; it only edits existing messages (and advances a finished week).
 - Only tick a task `[x]` when the work is really done and verified.
 - Headings must look like `## Week 1: Title` (or `## هفته ۱: عنوان`); tasks are `- [ ]` / `- [x]` lines.
-- If the command is not found, tell the user to install it: `pipx install tgpm` (or `python -m tgpm ...` from the tgpm folder).
+- If the command is not found, tell the user to install it: `pipx install git+https://github.com/alipyth/roadgram`.
 """
 
 SYNC_COMMAND = """---
-description: Sync ROADMAP.md progress to the Telegram group (tgpm sync)
-allowed-tools: Bash(tgpm status:*), Bash(tgpm sync:*)
+description: Sync ROADMAP.md progress to the Telegram group (roadgram sync)
+allowed-tools: Bash(roadgram status:*), Bash(roadgram sync:*)
 ---
-Run `tgpm status`, then `tgpm sync`, and report the result in one or two lines. Do not read `.env`.
+Run `roadgram status`, then `roadgram sync`, and report the result in one or two lines. Do not read `.env`.
 """
 
 PLUGIN_JSON = """{
-  "name": "tgpm",
+  "name": "roadgram",
   "version": "0.1.0",
-  "description": "Roadmap, weekly plan and announcements in a Telegram group, driven by the tgpm CLI.",
+  "description": "Roadmap, weekly plan and announcements in a Telegram group, driven by the roadgram CLI.",
   "license": "MIT"
 }
 """
 
 
 def skill_md() -> str:
-    return f"---\nname: tgpm\ndescription: {DESCRIPTION}\n---\n\n{BODY}"
+    return f"---\nname: roadgram\ndescription: {DESCRIPTION}\n---\n\n{BODY}"
 
 
 def cursor_mdc() -> str:
@@ -71,27 +71,27 @@ def cline_md() -> str:
 
 
 # tool -> (project files, global files); each file is (path relative to base, content, mode)
-# mode "file" = tgpm owns the file, "block" = marked block inside a shared file.
+# mode "file" = roadgram owns the file, "block" = marked block inside a shared file.
 def targets(tool: str, base: Path, home: Path, is_global: bool):
     if tool == "claude":
         root = home / ".claude" if is_global else base / ".claude"
-        files = [(root / "skills" / "tgpm" / "SKILL.md", skill_md(), "file"),
-                 (root / "commands" / "tgpm-sync.md", SYNC_COMMAND, "file")]
+        files = [(root / "skills" / "roadgram" / "SKILL.md", skill_md(), "file"),
+                 (root / "commands" / "roadgram-sync.md", SYNC_COMMAND, "file")]
         if not is_global:  # also make the project installable as a plugin
             files += [(base / ".claude-plugin" / "plugin.json", PLUGIN_JSON, "file"),
-                      (base / "skills" / "tgpm" / "SKILL.md", skill_md(), "file")]
+                      (base / "skills" / "roadgram" / "SKILL.md", skill_md(), "file")]
         return files
     if tool == "codex":
         return [((home / ".codex" if is_global else base) / "AGENTS.md", BODY, "block")]
     if tool == "cline":
         if is_global:
             docs = Path(os.environ.get("CLINE_RULES_DIR") or home / "Documents" / "Cline" / "Rules")
-            return [(docs / "tgpm.md", cline_md(), "file")]
-        return [(base / ".clinerules" / "tgpm.md", cline_md(), "file")]
+            return [(docs / "roadgram.md", cline_md(), "file")]
+        return [(base / ".clinerules" / "roadgram.md", cline_md(), "file")]
     if tool == "cursor":
         if is_global:
             return []  # Cursor user rules live in its settings UI, not in files
-        return [(base / ".cursor" / "rules" / "tgpm.mdc", cursor_mdc(), "file")]
+        return [(base / ".cursor" / "rules" / "roadgram.mdc", cursor_mdc(), "file")]
     if tool == "gemini":
         return [((home / ".gemini" if is_global else base) / "GEMINI.md", BODY, "block")]
     raise ValueError(tool)

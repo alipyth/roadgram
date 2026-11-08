@@ -1,15 +1,15 @@
-"""Command line: tgpm init | check | status | week N | plan N | sync | post."""
+"""Command line: roadgram init | check | status | week N | plan N | sync | post."""
 import argparse
 import html
 import sys
 from datetime import date
 from pathlib import Path
 
-from tgpm import __version__, agents
-from tgpm.i18n import SAMPLE_ROADMAP
-from tgpm.manager import CONFIG_NAME, Manager, State, default_config, find_root, load_config
-from tgpm.roadmap import parse_roadmap, render_plan, render_week
-from tgpm.telegram import Bot, credentials
+from roadgram import __version__, agents
+from roadgram.i18n import SAMPLE_ROADMAP
+from roadgram.manager import CONFIG_NAME, Manager, State, default_config, find_root, load_config
+from roadgram.roadmap import parse_roadmap, render_plan, render_week
+from roadgram.telegram import Bot, credentials
 
 ENV_TEMPLATE = """# Keep this file private. Never commit it.
 # Token: talk to @BotFather -> /newbot (or /token for an existing bot).
@@ -18,7 +18,7 @@ TELEGRAM_BOT_TOKEN=
 # Supergroup ids look like -1001234567890.
 TELEGRAM_CHAT_ID=
 """
-GITIGNORE_LINES = [".env", ".tgpm/"]
+GITIGNORE_LINES = [".env", ".roadgram/"]
 
 
 def out(msg: str = ""):
@@ -48,7 +48,7 @@ def cmd_init(a) -> int:
         gi.write_text("\n".join(existing + missing) + "\n", encoding="utf-8")
         created.append(".gitignore")
     out("Created/updated: " + ", ".join(created))
-    out("Next: fill TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env, then run: tgpm check")
+    out("Next: fill TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env, then run: roadgram check")
     return 0
 
 
@@ -60,7 +60,7 @@ def cmd_agent(a) -> int:
     elif "auto" in names:
         tools = agents.detect(base, home)
         if not tools:
-            out("No AI coding tool detected. Name one: " + ", ".join(agents.TOOLS) + " (or: all).")
+            out("No supported editor or terminal tool detected. Name one: " + ", ".join(agents.TOOLS) + " (or: all).")
             return 1
         out("Detected: " + ", ".join(tools))
     else:
@@ -75,7 +75,7 @@ def cmd_agent(a) -> int:
 def project(a):
     root = find_root(Path(a.dir).resolve())
     if root is None:
-        out(f"No {CONFIG_NAME} found. Run `tgpm init` in your project folder first.")
+        out(f"No {CONFIG_NAME} found. Run `roadgram init` in your project folder first.")
         return None
     return root, load_config(root)
 
@@ -194,7 +194,7 @@ def cmd_sync(a) -> int:
     if not mgr:
         return 2
     results = mgr.sync(weeks, date.today())
-    out("\n".join(results) if results else "Nothing posted yet. Start with: tgpm week 1  and  tgpm plan 2")
+    out("\n".join(results) if results else "Nothing posted yet. Start with: roadgram week 1  and  roadgram plan 2")
     return 1 if any("failed" in r for r in results) else 0
 
 
@@ -239,19 +239,19 @@ def cmd_post(a) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="tgpm", description="Manage a project's roadmap, plan and updates in a Telegram group.")
-    ap.add_argument("--version", action="version", version=f"tgpm {__version__}")
-    ap.add_argument("--dir", default=".", help="project folder (default: current; tgpm.json is searched upwards)")
+    ap = argparse.ArgumentParser(prog="roadgram", description="Manage a project's roadmap, plan and updates in a Telegram group.")
+    ap.add_argument("--version", action="version", version=f"roadgram {__version__}")
+    ap.add_argument("--dir", default=".", help="project folder (default: current; roadgram.json is searched upwards)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    s = sub.add_parser("init", help="create tgpm.json, .env and a sample roadmap in this folder")
+    s = sub.add_parser("init", help="create roadgram.json, .env and a sample roadmap in this folder")
     s.add_argument("--name", help="project name (default: folder name)")
     s.add_argument("--lang", choices=["en", "fa"], default="en", help="language of the messages")
     s.add_argument("--calendar", choices=["gregorian", "jalali", "both"], default="gregorian")
     s.add_argument("--force", action="store_true")
     s.set_defaults(fn=cmd_init)
 
-    s = sub.add_parser("agent", help="install/remove tgpm instructions for Claude Code, Codex, Cline, Cursor, Gemini CLI")
+    s = sub.add_parser("agent", help="install/remove roadgram instructions for Claude Code, Codex, Cline, Cursor, Gemini CLI")
     s.add_argument("action", choices=["install"], help="install (add --uninstall to remove)")
     s.add_argument("tools", nargs="*", choices=[*agents.TOOLS, "all", "auto"],
                    help="which tools (default: auto-detect)")
@@ -274,7 +274,7 @@ def build_parser() -> argparse.ArgumentParser:
                    ).set_defaults(fn=cmd_sync)
 
     s = sub.add_parser("post", help="send a NEW message or file to a topic (explicit announcement)")
-    s.add_argument("--topic", default="updates", help="topic key from tgpm.json (default: updates)")
+    s.add_argument("--topic", default="updates", help="topic key from roadgram.json (default: updates)")
     s.add_argument("--text")
     s.add_argument("--file", help="text file whose content is the message")
     s.add_argument("--document", help="attach this file (text becomes the caption)")

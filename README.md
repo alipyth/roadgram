@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="tgpm — Telegram Project Manager" width="100%">
+<img src="assets/banner.svg" alt="roadgram" width="100%">
 
 <br>
 
@@ -18,12 +18,12 @@
 
 ---
 
-## ✨ What is tgpm?
+## ✨ What is roadgram?
 
-**tgpm** keeps a project's roadmap, weekly plan and announcements inside a Telegram group, so a developer and a project manager (or a client) can follow progress in one place, with no other tool.
+**roadgram** keeps a project's roadmap, weekly plan and announcements inside a Telegram group, so a developer and a project manager (or a client) can follow progress in one place, with no other tool.
 
 <div align="center">
-<img src="assets/flow.svg" alt="ROADMAP.md → tgpm sync → Telegram" width="90%">
+<img src="assets/flow.svg" alt="ROADMAP.md → roadgram sync → Telegram" width="90%">
 </div>
 
 You write the roadmap as a normal Markdown checklist in your repository. After every change you run one command and the Telegram messages update themselves.
@@ -35,14 +35,14 @@ You write the roadmap as a normal Markdown checklist in your repository. After e
 | 🗺 | **Roadmap topic** | One message per week with a progress bar and ✅/⬜ per task. Edited in place, pinned. |
 | 📅 | **Next-week plan** | Goals of the coming week plus what is still open. Only the newest plan stays pinned. |
 | ⏭ | **Auto-advance** | When every task of the week is ticked, the next roadmap and plan are posted and pinned. |
-| 📣 | **Updates topic** | Announcements and files with `tgpm post`, only when you send them. |
+| 📣 | **Updates topic** | Announcements and files with `roadgram post`, only when you send them. |
 | 🌍 | **Two languages** | Messages in English or Persian, with Gregorian, Jalali or both dates. |
-| 🤖 | **AI agent ready** | `tgpm agent install` teaches Claude Code, Codex, Cline, Cursor and Gemini CLI to use it. |
-| 📦 | **Zero dependencies** | Standard library only, plus a single-file `tgpm.exe` for Windows. |
+| 🤖 | **AI agent ready** | `roadgram agent install` teaches Claude Code, Codex, Cline, Cursor and Gemini CLI to use it. |
+| 📦 | **Zero dependencies** | Standard library only, plus a single-file `roadgram.exe` for Windows. |
 
 ## 📥 Install from scratch
 
-tgpm needs **Python 3.10 or newer** and **git**. It has no other dependencies. A Telegram account is needed for the bot (see [Quick start](#-quick-start)).
+roadgram needs **Python 3.10 or newer** and **git**. It has no other dependencies. A Telegram account is needed for the bot (see [Quick start](#-quick-start)).
 
 ### Windows
 
@@ -53,14 +53,14 @@ winget install Git.Git
 # close and reopen PowerShell, then check:
 python --version
 
-# 2. Install tgpm
+# 2. Install roadgram
 python -m pip install git+https://github.com/alipyth/roadgram.git
 
 # 3. Check it works
-tgpm --version
+roadgram --version
 ```
 
-If `tgpm` is "not recognized", use `python -m tgpm --version` instead, or add Python's `Scripts` folder to `PATH`.
+If `roadgram` is "not recognized", use `python -m roadgram --version` instead, or add Python's `Scripts` folder to `PATH`.
 
 ### macOS
 
@@ -69,12 +69,12 @@ If `tgpm` is "not recognized", use `python -m tgpm --version` instead, or add Py
 brew install python git
 python3 --version
 
-# 2. Install tgpm (pipx keeps it isolated and puts `tgpm` on your PATH)
+# 2. Install roadgram (pipx keeps it isolated and puts `roadgram` on your PATH)
 brew install pipx && pipx ensurepath
 pipx install git+https://github.com/alipyth/roadgram.git
 
 # 3. Check it works (open a new terminal first)
-tgpm --version
+roadgram --version
 ```
 
 ### Linux (Debian / Ubuntu; other distros use their own package manager)
@@ -85,12 +85,12 @@ sudo apt update
 sudo apt install -y python3 python3-pip pipx git
 python3 --version        # must be 3.10 or newer
 
-# 2. Install tgpm
+# 2. Install roadgram
 pipx ensurepath
 pipx install git+https://github.com/alipyth/roadgram.git
 
 # 3. Check it works (open a new terminal first)
-tgpm --version
+roadgram --version
 ```
 
 On Fedora use `sudo dnf install python3 pipx git`, on Arch `sudo pacman -S python python-pipx git`.
@@ -104,45 +104,45 @@ python -m pip install .            # or: python -m pip install -e .   (editable)
 python -m unittest discover -s tests -t .      # optional: run the tests
 ```
 
-You can also skip installing and run it straight from the clone: `python -m tgpm --version`.
+You can also skip installing and run it straight from the clone: `python -m roadgram --version`.
 
 ### Update and uninstall
 
 ```bash
-pipx upgrade tgpm          # or: python -m pip install --upgrade git+https://github.com/alipyth/roadgram.git
-pipx uninstall tgpm        # or: python -m pip uninstall tgpm
+pipx upgrade roadgram          # or: python -m pip install --upgrade git+https://github.com/alipyth/roadgram.git
+pipx uninstall roadgram        # or: python -m pip uninstall roadgram
 ```
 
-### Windows: a single `tgpm.exe` (no Python on the target PC)
+### Windows: a single `roadgram.exe` (no Python on the target PC)
 
-On a PC that has Python, build it once and copy `dist\tgpm.exe` anywhere:
+On a PC that has Python, build it once and copy `dist\roadgram.exe` anywhere:
 
 ```powershell
 git clone https://github.com/alipyth/roadgram.git
 cd roadgram
-powershell -File build_exe.ps1     # runs the tests, installs PyInstaller, builds dist\tgpm.exe
-.\dist\tgpm.exe --version
+powershell -File build_exe.ps1     # runs the tests, installs PyInstaller, builds dist\roadgram.exe
+.\dist\roadgram.exe --version
 ```
 
 ## 🧭 Your first run, step by step
 
 1. Do the [Telegram setup](#1-set-up-telegram-once-5-minutes) and keep the **bot token** and **group id** at hand.
 2. Open a terminal **in your project folder** (the repo you want to track).
-3. `tgpm init --name "My App"` creates `tgpm.json`, `.env`, `ROADMAP.md` and updates `.gitignore`.
+3. `roadgram init --name "My App"` creates `roadgram.json`, `.env`, `ROADMAP.md` and updates `.gitignore`.
 4. Open `.env` and paste your values:
    ```ini
    TELEGRAM_BOT_TOKEN=123456:ABC-your-token
    TELEGRAM_CHAT_ID=-1001234567890
    ```
 5. Edit `ROADMAP.md` to your real weeks and tasks.
-6. `tgpm check` must report that the token, group and rights are fine.
-7. `tgpm week 1 --dry-run` shows the message without sending it.
-8. `tgpm week 1` and `tgpm plan 2` post and pin the real messages.
-9. From now on: tick tasks in `ROADMAP.md`, then run `tgpm sync`.
+6. `roadgram check` must report that the token, group and rights are fine.
+7. `roadgram week 1 --dry-run` shows the message without sending it.
+8. `roadgram week 1` and `roadgram plan 2` post and pin the real messages.
+9. From now on: tick tasks in `ROADMAP.md`, then run `roadgram sync`.
 
 ## 👀 What it looks like
 
-Output of `tgpm week 1` (a message in your Telegram topic):
+Output of `roadgram week 1` (a message in your Telegram topic):
 
 ```text
 🗺 Week 1: Foundation
@@ -166,32 +166,32 @@ Week output: a working core feature with tests
 
 1. Open **@BotFather** → `/newbot` → copy the **token**.
 2. Create a group (or use an existing one) and add the bot.
-3. For one topic per section, turn on **Topics** in the group settings. Without topics tgpm still works and posts to the main chat.
+3. For one topic per section, turn on **Topics** in the group settings. Without topics roadgram still works and posts to the main chat.
 4. Make the bot an **admin** with **Pin messages** and, if topics are on, **Manage topics**.
 5. Find the group id (like `-1001234567890`): forward a group message to **@RawDataBot**.
 
 > [!IMPORTANT]
-> **Keep the token secret.** It lives only in `.env`, which `tgpm init` adds to `.gitignore`. tgpm never prints it, logs it or writes it into messages. If it leaks, run `/revoke` in @BotFather.
+> **Keep the token secret.** It lives only in `.env`, which `roadgram init` adds to `.gitignore`. roadgram never prints it, logs it or writes it into messages. If it leaks, run `/revoke` in @BotFather.
 
 ### 2. Run it
 
 ```powershell
-# in your project folder (tgpm.exe, or: python -m tgpm ...)
-tgpm init --name "My App" --lang en --calendar gregorian   # tgpm.json, .env, ROADMAP.md, .gitignore
+# in your project folder (roadgram.exe, or: python -m roadgram ...)
+roadgram init --name "My App" --lang en --calendar gregorian   # roadgram.json, .env, ROADMAP.md, .gitignore
 # put TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID into .env, then:
-tgpm check                 # verifies token, group, topics and the bot's rights
-tgpm week 1 --dry-run      # preview the message (sends nothing)
-tgpm week 1                # post (and pin) the roadmap of week 1
-tgpm plan 2                # post (and pin) the plan of week 2
+roadgram check                 # verifies token, group, topics and the bot's rights
+roadgram week 1 --dry-run      # preview the message (sends nothing)
+roadgram week 1                # post (and pin) the roadmap of week 1
+roadgram plan 2                # post (and pin) the plan of week 2
 # ... work, tick tasks in ROADMAP.md ...
-tgpm sync                  # edit every posted message; post the next week when this one is done
-tgpm post --text "Release candidate is ready" --pin
-tgpm post --document report.pdf --text "Weekly report"
-tgpm status                # progress in the terminal, sends nothing
+roadgram sync                  # edit every posted message; post the next week when this one is done
+roadgram post --text "Release candidate is ready" --pin
+roadgram post --document report.pdf --text "Weekly report"
+roadgram status                # progress in the terminal, sends nothing
 ```
 
 > [!TIP]
-> Run `tgpm sync` after every change to `ROADMAP.md`. A git hook or CI step works well.
+> Run `roadgram sync` after every change to `ROADMAP.md`. A git hook or CI step works well.
 
 ### 3. The roadmap file
 
@@ -211,30 +211,30 @@ A heading `## Week N: ...` (also `Sprint`, `Phase`, `Milestone`, or Persian `## 
 ## 🤖 Use it from AI coding agents
 
 ```powershell
-tgpm agent install            # auto-detects Claude Code, Codex, Cline, Cursor, Gemini CLI
-tgpm agent install all        # or name them: claude codex cline cursor gemini
-tgpm agent install --global   # for your user instead of only this project
-tgpm agent install --uninstall
+roadgram agent install            # auto-detects Claude Code, Codex, Cline, Cursor, Gemini CLI
+roadgram agent install all        # or name them: claude codex cline cursor gemini
+roadgram agent install --global   # for your user instead of only this project
+roadgram agent install --uninstall
 ```
 
-It writes each tool's own format: a skill and `/tgpm-sync` command for Claude Code (plus a `.claude-plugin`), a marked block in `AGENTS.md` (Codex) and `GEMINI.md`, `.clinerules/tgpm.md` (Cline) and `.cursor/rules/tgpm.mdc` (Cursor). Re-running updates in place and keeps your own text. The agent is told never to read `.env`.
+It writes each tool's own format: a skill and `/roadgram-sync` command for Claude Code (plus a `.claude-plugin`), a marked block in `AGENTS.md` (Codex) and `GEMINI.md`, `.clinerules/roadgram.md` (Cline) and `.cursor/rules/roadgram.mdc` (Cursor). Re-running updates in place and keeps your own text. The agent is told never to read `.env`.
 
 ## 📖 Commands
 
 | Command | What it does |
 |---|---|
-| `tgpm init` | Creates `tgpm.json`, a `.env` template, a sample `ROADMAP.md` and `.gitignore` entries. Never overwrites without `--force`. |
-| `tgpm check` | Checks token, group, topics and the bot's admin rights. |
-| `tgpm week N [--dry-run]` | Posts or edits the roadmap message of week N (pinned on first post). |
-| `tgpm plan N [--dry-run]` | Posts or edits the plan message of week N; older plans are unpinned. |
-| `tgpm sync` | Edits all posted messages; advances when the current week is fully ticked. |
-| `tgpm post` | Sends a **new** message or file to a topic (`--topic`, `--text`, `--file`, `--document`, `--pin`, `--raw-html`, `--dry-run`). |
-| `tgpm status` | Prints progress from the roadmap file. |
-| `tgpm agent install` | Installs tgpm instructions for AI coding agents. |
+| `roadgram init` | Creates `roadgram.json`, a `.env` template, a sample `ROADMAP.md` and `.gitignore` entries. Never overwrites without `--force`. |
+| `roadgram check` | Checks token, group, topics and the bot's admin rights. |
+| `roadgram week N [--dry-run]` | Posts or edits the roadmap message of week N (pinned on first post). |
+| `roadgram plan N [--dry-run]` | Posts or edits the plan message of week N; older plans are unpinned. |
+| `roadgram sync` | Edits all posted messages; advances when the current week is fully ticked. |
+| `roadgram post` | Sends a **new** message or file to a topic (`--topic`, `--text`, `--file`, `--document`, `--pin`, `--raw-html`, `--dry-run`). |
+| `roadgram status` | Prints progress from the roadmap file. |
+| `roadgram agent install` | Installs roadgram instructions for AI coding agents. |
 
-Global option: `--dir <folder>` (default: current folder; `tgpm.json` is searched upwards).
+Global option: `--dir <folder>` (default: current folder; `roadgram.json` is searched upwards).
 
-## ⚙️ Configuration (`tgpm.json`)
+## ⚙️ Configuration (`roadgram.json`)
 
 | Key | Meaning | Default |
 |---|---|---|
@@ -243,26 +243,26 @@ Global option: `--dir <folder>` (default: current folder; `tgpm.json` is searche
 | `language` | `en` or `fa` | `en` |
 | `calendar` | `gregorian`, `jalali` or `both` | `gregorian` |
 | `roadmap_file` | Path to the Markdown roadmap | `ROADMAP.md` |
-| `topics` | Topic names by key: `roadmap`, `plan`, `updates` (add your own keys for `tgpm post --topic`) | per language |
+| `topics` | Topic names by key: `roadmap`, `plan`, `updates` (add your own keys for `roadgram post --topic`) | per language |
 | `max_item_len` | Longest task text in a message | `120` |
 | `advance` | Auto-post the next week when the current one is done | `true` |
 
-State (message and topic ids) is kept in `.tgpm/state.json`. If you delete a message in Telegram, remove its id from that file and the next run posts a new one.
+State (message and topic ids) is kept in `.roadgram/state.json`. If you delete a message in Telegram, remove its id from that file and the next run posts a new one.
 
 ## 🛠 Build the executable
 
 ```powershell
-powershell -File build_exe.ps1     # runs the tests, then builds dist\tgpm.exe with PyInstaller
+powershell -File build_exe.ps1     # runs the tests, then builds dist\roadgram.exe with PyInstaller
 ```
 
 Run the tests alone: `python -m unittest discover -s tests -t .`
 
 ## 🔒 Notes and limits
 
-- tgpm only sends what you ask for: `week`, `plan`, `sync` and `post`. It never reads group messages.
+- roadgram only sends what you ask for: `week`, `plan`, `sync` and `post`. It never reads group messages.
 - The token never appears in output or errors; network errors show only the error class.
 - Telegram messages are limited to 4096 characters. Long weeks are shortened with "… and N more".
-- Windows editors may add a BOM to `.env` and `tgpm.json`; tgpm reads both correctly.
+- Windows editors may add a BOM to `.env` and `roadgram.json`; roadgram reads both correctly.
 
 ---
 

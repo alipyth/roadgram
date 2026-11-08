@@ -1,5 +1,5 @@
 import sys
 
-from tgpm.cli import main
+from roadgram.cli import main
 
 sys.exit(main())

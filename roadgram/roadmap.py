@@ -12,8 +12,8 @@ import html
 import re
 from datetime import date
 
-from tgpm.dates import FA_TO_EN, date_text, digits
-from tgpm.i18n import STRINGS
+from roadgram.dates import FA_TO_EN, date_text, digits
+from roadgram.i18n import STRINGS
 
 TELEGRAM_LIMIT = 4096
 

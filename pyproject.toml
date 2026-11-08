@@ -3,16 +3,20 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tgpm"
+name = "roadgram"
 version = "0.1.0"
-description = "Manage a project's roadmap, weekly plan and updates in a Telegram group (forum topics)."
+description = "Publish a Markdown roadmap and weekly plan to a Telegram group, with progress bars, auto-advance and one-command editor integrations."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = []
 
 [project.scripts]
-tgpm = "tgpm.cli:main"
+roadgram = "roadgram.cli:main"
 
 [tool.setuptools]
-packages = ["tgpm"]
+packages = ["roadgram"]
+
+[project.urls]
+Homepage = "https://github.com/alipyth/roadgram"
+Issues = "https://github.com/alipyth/roadgram/issues"

@@ -7,11 +7,11 @@ from datetime import date
 from pathlib import Path
 from unittest import mock
 
-from tgpm import cli
-from tgpm.dates import date_text, gregorian_to_jalali
-from tgpm.manager import Manager, State, default_config, find_root
-from tgpm.roadmap import parse_roadmap, render_plan, render_week
-from tgpm.telegram import Bot, api
+from roadgram import cli
+from roadgram.dates import date_text, gregorian_to_jalali
+from roadgram.manager import Manager, State, default_config, find_root
+from roadgram.roadmap import parse_roadmap, render_plan, render_week
+from roadgram.telegram import Bot, api
 
 EN = """# Roadmap
 
@@ -204,10 +204,10 @@ class Cli(unittest.TestCase):
             code, _ = self.run_cli("--dir", tmp, "init", "--name", "Demo", "--lang", "fa", "--calendar", "jalali")
             self.assertEqual(code, 0)
             root = Path(tmp)
-            self.assertTrue((root / "tgpm.json").exists() and (root / ".env").exists())
+            self.assertTrue((root / "roadgram.json").exists() and (root / ".env").exists())
             gi = (root / ".gitignore").read_text()
             self.assertIn(".env", gi)
-            self.assertIn(".tgpm/", gi)
+            self.assertIn(".roadgram/", gi)
             code, text = self.run_cli("--dir", tmp, "week", "1", "--dry-run")
             self.assertEqual(code, 0)
             self.assertIn("هفته ۱", text)
@@ -221,7 +221,7 @@ class Cli(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             code, text = self.run_cli("--dir", tmp, "sync")
             self.assertEqual(code, 2)
-            self.assertIn("tgpm init", text)
+            self.assertIn("roadgram init", text)
             self.run_cli("--dir", tmp, "init")
             with mock.patch.dict("os.environ", {}, clear=True):
                 code, text = self.run_cli("--dir", tmp, "sync")
@@ -229,12 +229,12 @@ class Cli(unittest.TestCase):
             self.assertIn("TELEGRAM_BOT_TOKEN", text)
 
     def test_env_and_config_with_a_windows_bom_are_read(self):
-        from tgpm.telegram import credentials
+        from roadgram.telegram import credentials
         with tempfile.TemporaryDirectory() as tmp:
             self.run_cli("--dir", tmp, "init")
             root = Path(tmp)
             (root / ".env").write_text("TELEGRAM_BOT_TOKEN=abc\nTELEGRAM_CHAT_ID=-1\n", encoding="utf-8-sig")
-            cfg = root / "tgpm.json"
+            cfg = root / "roadgram.json"
             cfg.write_text(cfg.read_text(encoding="utf-8"), encoding="utf-8-sig")
             with mock.patch.dict("os.environ", {}, clear=True):
                 self.assertEqual(credentials(root), ("abc", "-1"))
@@ -258,7 +258,7 @@ class Cli(unittest.TestCase):
 
 class AgentInstallTests(unittest.TestCase):
     def test_install_is_idempotent_and_keeps_user_content(self):
-        from tgpm import agents
+        from roadgram import agents
         with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as h:
             base, home = Path(d), Path(h)
             (base / "AGENTS.md").write_text("# mine" + chr(10), encoding="utf-8")
@@ -267,8 +267,8 @@ class AgentInstallTests(unittest.TestCase):
             text = (base / "AGENTS.md").read_text(encoding="utf-8")
             self.assertEqual(text.count(agents.BEGIN), 1)
             self.assertTrue(text.startswith("# mine"))
-            self.assertTrue((base / ".claude/skills/tgpm/SKILL.md").exists())
-            self.assertTrue((base / ".clinerules/tgpm.md").exists())
+            self.assertTrue((base / ".claude/skills/roadgram/SKILL.md").exists())
+            self.assertTrue((base / ".clinerules/roadgram.md").exists())
             agents.run(list(agents.TOOLS), base, home, uninstall=True)
             self.assertEqual((base / "AGENTS.md").read_text(encoding="utf-8").strip(), "# mine")
             self.assertFalse((base / "GEMINI.md").exists())

@@ -1,5 +1,5 @@
 .env
-.tgpm/
+.roadgram/
 __pycache__/
 build/
 dist/

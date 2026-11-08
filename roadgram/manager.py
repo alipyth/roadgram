@@ -3,12 +3,12 @@ import json
 from datetime import date
 from pathlib import Path
 
-from tgpm.i18n import DEFAULT_TOPICS
-from tgpm.roadmap import render_plan, render_week, week_done
-from tgpm.telegram import Bot
+from roadgram.i18n import DEFAULT_TOPICS
+from roadgram.roadmap import render_plan, render_week, week_done
+from roadgram.telegram import Bot
 
-CONFIG_NAME = "tgpm.json"
-STATE_DIR = ".tgpm"
+CONFIG_NAME = "roadgram.json"
+STATE_DIR = ".roadgram"
 STATE_NAME = "state.json"
 
 
@@ -26,7 +26,7 @@ def default_config(project: str, language: str = "en", calendar: str = "gregoria
 
 
 def find_root(start: Path) -> Path | None:
-    """Nearest folder at or above `start` that holds tgpm.json."""
+    """Nearest folder at or above `start` that holds roadgram.json."""
     for p in [start, *start.parents]:
         if (p / CONFIG_NAME).exists():
             return p
@@ -43,7 +43,7 @@ def load_config(root: Path) -> dict:
 
 
 class State:
-    """Message ids and topic ids, kept in <root>/.tgpm/state.json (keep it out of git)."""
+    """Message ids and topic ids, kept in <root>/.roadgram/state.json (keep it out of git)."""
 
     def __init__(self, root: Path):
         self.path = root / STATE_DIR / STATE_NAME
